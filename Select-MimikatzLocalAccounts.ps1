@@ -47,11 +47,11 @@ function Select-MimikatzLocalAccounts {
     .PARAMETER Path
     Choose the path or GLOB pattern that tells the function which files to search.
 
-    .PARAMETER HashcatSelect
-    Choose to look for either passwords or hashes (ntlm and sha1).
-
     .PARAMETER OutputTo
     Output the results either to the console, to a format parseable in hashcat, or to CSV.
+
+    .PARAMETER HashcatSelect
+    Choose to look for either passwords or hashes (ntlm and lm).
 #>
     [CmdletBinding()]
     Param (

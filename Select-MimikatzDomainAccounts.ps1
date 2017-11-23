@@ -53,11 +53,11 @@ function Select-MimikatzDomainAccounts {
     .PARAMETER Path
     Choose the path or GLOB pattern that tells the function which files to search.
 
-    .PARAMETER HashcatSelect
-    Choose to look for either passwords or hashes (ntlm and sha1).
-
     .PARAMETER OutputTo
     Output the results either to the console, to a format parseable in hashcat, or to CSV.
+
+    .PARAMETER HashcatSelect
+    Choose to look for either passwords or hashes (ntlm and sha1).
 #>
     [CmdletBinding()]
     Param (
@@ -76,6 +76,7 @@ function Select-MimikatzDomainAccounts {
 
     $DomainPasswordRegex = "\s+\*\s+Username\s+:\s+(?<username>[-_a-zA-Z0-9]+)[\r\n]+\s+\*\s+Domain\s+:\s+(?<domain>[a-zA-Z0-9]+)[\r\n]+\s+\*\s+Password\s+:\s+(?<password>(?!\(null\)).*)[\r\n]+"
     $DomainHashRegex = "\s+\*\s+Username\s+:\s+(?<username>[-_a-zA-Z0-9]+)[\r\n]+\s+\*\s+Domain\s+:\s+(?<domain>[a-zA-Z0-9]+)[\r\n]+(\s+\*\sFlags\s+:\s+.*[\r\n]+)?\s+\*\s+NTLM\s+:\s+(?<ntlm>[0-9a-fA-F]+)[\r\n]+\s+\*\sSHA1\s+:\s+(?<sha1>[0-9a-fA-F]+)[\r\n]+"
+    $DomainCredmanRegex = "credman\s+:\s+[\r\n]+(?:\s+\[[0-9]+\][\r\n]+\s+\*\s+Username\s+:\s+(?<domain>[-_a-zA-Z0-9]+)\\(?<username>[-_a-zA-Z0-9]+)[\r\n]+\s+\*\s+Domain.*[\r\n]+\s+\*\s+Password\s+:\s+(?<password>.*)[\r\n]+)+"
 
     $DomainAccounts = @{}
     Foreach ($LogFile in Get-ChildItem -Recurse $Path) {
@@ -110,6 +111,26 @@ function Select-MimikatzDomainAccounts {
                     $SearchEntry.NTLM = $g["ntlm"].Value
                     $SearchEntry.SHA1 = $g["sha1"].Value
                     $DomainAccounts.Set_Item($Username, $SearchEntry)
+                }
+            }
+        }
+
+        $DomainCredmanMatches = Select-String -InputObject $Content -AllMatches -Pattern $DomainCredmanRegex
+        if ($DomainCredmanMatches -ne $null) {
+            Foreach ($Match in $DomainCredmanMatches.Matches) {
+                For ($i=0; $i -lt $Match.Groups["username"].Captures.Count; $i++) {
+                    $Domain = $Match.Groups["domain"].Captures[$i].Value
+                    $Username = $Match.Groups["username"].Captures[$i].Value
+                    $Password = $Match.Groups["password"].Captures[$i].Value
+                    if (!$DomainAccounts.ContainsKey($Username)) {
+                        $SearchEntry = New-DomainAccountEntry -Domain $Domain -Username $Username -Password $Password
+                        $DomainAccounts.Add($Username, $SearchEntry)
+                    } else {
+                        $SearchEntry = $DomainAccounts.Get_Item($Username)
+                        $SearchEntry.Domain = $Domain
+                        $SearchEntry.Password = $Password
+                        $DomainAccounts.Set_Item($Username, $SearchEntry)
+                    }
                 }
             }
         }
