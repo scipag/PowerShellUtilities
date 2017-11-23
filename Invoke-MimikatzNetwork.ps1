@@ -8,8 +8,8 @@
     Optional Dependencies: None
 #>
 
-#Requires -Version 2
-Set-StrictMode -Version 2
+#Requires -Version 5
+Set-StrictMode -Version 5
 
 function Invoke-MimikatzNetwork {
 <#
