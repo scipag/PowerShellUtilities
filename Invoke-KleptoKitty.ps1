@@ -91,8 +91,9 @@ Function Main {
             Copy-Item -Path $PayloadPath -Destination $TargetPayloadPath -ErrorAction Stop
         } catch {
             $ErrorReason = $_.Exception.Message
-            Write-ProtocolEntry "Connection to $Hostname failed. Reason: $ErrorReason" "Error"            
-            Break
+            Write-ProtocolEntry "Connection to $Hostname failed. Reason: $ErrorReason" "Error"
+            Write-ProtocolEntry "$Hostname done" "Error"
+            Continue
         }
 
         Write-ProtocolEntry "Dumping memory on $Hostname" "Info"
@@ -133,13 +134,14 @@ Function Main {
         Start-Sleep -Seconds $SleepTime    
         
         Write-ProtocolEntry "Retrieving log file" "Info"
+        $Error.Clear()
         try {
             Copy-Item -Path $TargetLogPath -Destination $LogTargetPath -ErrorAction Stop 
         } catch {
             $ErrorReason = $_.Exception.Message
             Write-ProtocolEntry "Retrieving log file failed. Reason: $ErrorReason" "Error"            
         }
-        if (!$Error) {
+        if ($Error.Count -eq 0) {
             Write-ProtocolEntry "Log file $LogTargetName saved." "Success"
         }
 
