@@ -107,7 +107,8 @@ Function Main {
             } catch {
                 $ErrorReason = $_.Exception.Message
                 Write-ProtocolEntry "WMI connection to $Hostname failed. Reason: $ErrorReason" "Error"
-                Break
+                Write-ProtocolEntry "$Hostname done" "Error"
+                Continue
             }
         } ElseIf ($RemoteCommandExecution -eq "PsExec") {
             try {
@@ -115,7 +116,8 @@ Function Main {
             } catch {
                 $ErrorReason = $_.Exception.Message
                 Write-ProtocolEntry "PsExec connection to $Hostname failed. Reason: $ErrorReason" "Error"
-                Break                    
+                Write-ProtocolEntry "$Hostname done" "Error"
+                Continue                    
             }
         } ElseIf ($RemoteCommandExecution -eq "PSRemoting") {
             try {
@@ -125,7 +127,8 @@ Function Main {
             } catch {
                 $ErrorReason = $_.Exception.Message
                 Write-ProtocolEntry "PSRemoting connection to $Hostname failed. Reason: $ErrorReason" "Error"
-                Break                    
+                Write-ProtocolEntry "$Hostname done" "Error"
+                Continue                    
             }
         }
 
